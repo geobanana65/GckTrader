@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GCK to SEK Trading Game</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+            position: relative;
+        }
+        h1 {
+            color: #ffffff;
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        #chartContainer {
+            position: relative;
+            width: 1200px;
+            height: 800px;
+        }
+        canvas {
+            width: 100% !important;
+            height: 100% !important;
+            background-color: #2a2a2a;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+        }
+        #priceDisplay {
+            font-size: 64px;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #00ccff;
+            text-shadow: 0 0 10px rgba(0, 204, 255, 0.5);
+            text-align: center;
+        }
+        #controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        button, select {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #00ccff;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover, select:hover {
+            background-color: #00b3e6;
+        }
+        #priceHistory {
+            width: 1200px;
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: #2a2a2a;
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #cccccc;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #444444;
+        }
+        th {
+            background-color: #333333;
+        }
+        #balanceDisplay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #00ccff;
+            text-shadow: 0 0 10px rgba(0, 204, 255, 0.5);
+            text-align: right;
+        }
+        #percentDisplay {
+            margin-top: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+        }
+        #smartCalculator {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, #333 0%, #1a1a1a 70%);
+            border-radius: 50%;
+            border: 5px solid #00ccff;
+            box-shadow: 0 0 15px rgba(0, 204, 255, 0.5);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+        #needle {
+            width: 2px;
+            height: 80px;
+            background-color: #ffcc00;
+            position: absolute;
+            bottom: 50%;
+            transform-origin: bottom;
+            transition: transform 0.5s ease;
+        }
+        #calculatorText {
+            position: absolute;
+            text-align: center;
+            font-size: 16px;
+            color: #ffffff;
+            top: 10px;
+            width: 100%;
+        }
+        #loginContainer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+        #loginButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #00ccff;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        #loginButton:hover {
+            background-color: #00b3e6;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #2a2a2a;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+            width: 300px;
+            position: relative;
+        }
+        .close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #cccccc;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        h2 {
+            color: #00ccff;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #cccccc;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #333333;
+            color: #ffffff;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .modal-button {
+            width: 100%;
+            padding: 12px;
+            background-color: #00ccff;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .modal-button:hover {
+            background-color: #00b3e6;
+        }
+        .switch-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #00ccff;
+            cursor: pointer;
+        }
+        .switch-link:hover {
+            text-decoration: underline;
+        }
+        /* Admin Mod Menu Styles */
+        #adminModMenu {
+            display: none;
+            position: absolute;
+            top: 70px;
+            left: 20px;
+            background-color: #2a2a2a;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            width: 250px;
+            cursor: move;
+        }
+        #adminModMenu h3 {
+            margin: 0 0 10px 0;
+            color: #00ccff;
+            font-size: 18px;
+            text-align: center;
+        }
+        #adminModMenu .admin-section {
+            margin-bottom: 15px;
+        }
+        #adminModMenu label {
+            font-size: 14px;
+            color: #cccccc;
+        }
+        #adminModMenu input[type="number"] {
+            width: 100%;
+            margin-top: 5px;
+        }
+        #adminModMenu button {
+            width: 48%;
+            margin: 5px 1%;
+            font-size: 14px;
+            padding: 8px;
+        }
+        #adminModMenu .price-control button {
+            width: 30%;
+            margin: 5px 1.5%;
+        }
+        #hideAdminMenu {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background-color: #ff4444;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        #hideAdminMenu:hover {
+            background-color: #cc3333;
+        }
+        #showAdminMenu {
+            display: none;
+            position: absolute;
+            top: 70px;
+            left: 20px;
+            background-color: #00ccff;
+            color: #1a1a1a;
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 204, 255, 0.5);
+            cursor: move;
+            z-index: 999;
+        }
+        #showAdminMenu:hover {
+            background-color: #00b3e6;
+        }
+    </style>
+</head>
+<body>
+    <div id="loginContainer">
+        <button id="loginButton">Log In</button>
+    </div>
+    <div id="balanceDisplay">Your Balance: 9,130 SEK<br>Your GCK: 0</div>
+    <h1>GCK to SEK Trading Game</h1>
+    <div id="chartContainer">
+        <canvas id="gckSekChart"></canvas>
+    </div>
+    <div id="priceDisplay">Loading...</div>
+    <div id="controls">
+        <button id="buyButton">Buy GCK</button>
+        <button id="sellButton">Sell GCK</button>
+        <button id="percentButton">Percent Since Bought</button>
+        <button id="resetZoom">Reset Zoom</button>
+        <button id="toggleUpdates">Pause Updates</button>
+        <select id="timerangeSelect">
+            <option value="1min">1 Minute</option>
+            <option value="10min">10 Minutes</option>
+            <option value="1hour" selected>1 Hour</option>
+            <option value="5hours">5 Hours</option>
+            <option value="1day">1 Day</option>
+            <option value="1week">1 Week</option>
+            <option value="1month">1 Month</option>
+            <option value="1year">1 Year</option>
+            <option value="all">All Time</option>
+        </select>
+    </div>
+    <div id="percentDisplay"></div>
+    <div id="priceHistory">
+        <table>
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Price (SEK)</th>
+                </tr>
+            </thead>
+            <tbody id="historyTableBody"></tbody>
+        </table>
+    </div>
+    <div id="smartCalculator">
+        <div id="needle"></div>
+        <div id="calculatorText">Calculating...</div>
+    </div>
+
+    <!-- Admin Mod Menu -->
+    <div id="adminModMenu">
+        <button id="hideAdminMenu">Hide</button>
+        <h3>Admin Mod Menu</h3>
+        <div class="admin-section">
+            <label>Set Balance (SEK):</label>
+            <input type="number" id="adminSetBalance" min="0" step="1">
+            <button id="applyBalance">Apply</button>
+        </div>
+        <div class="admin-section">
+            <label>Set GCK:</label>
+            <input type="number" id="adminSetGck" min="0" step="0.01">
+            <button id="applyGck">Apply</button>
+        </div>
+        <div class="admin-section price-control">
+            <label>Price Control:</label>
+            <button id="priceUp">↑</button>
+            <button id="priceStop">■</button>
+            <button id="priceDown">↓</button>
+        </div>
+        <div class="admin-section">
+            <label>Set Price (SEK):</label>
+            <input type="number" id="adminSetPrice" step="1">
+            <button id="applyPrice">Apply</button>
+        </div>
+    </div>
+
+    <!-- Show Button -->
+    <button id="showAdminMenu">Show</button>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('loginModal')">×</span>
+            <h2>Login</h2>
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="input-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="modal-button">Login</button>
+            </form>
+            <div class="switch-link" onclick="switchToRegister()">Not registered yet? Register now</div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('registerModal')">×</span>
+            <h2>Register</h2>
+            <form id="registerForm">
+                <div class="input-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" required>
+                </div>
+                <div class="input-group">
+                    <label for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" required>
+                </div>
+                <div class="input-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" required>
+                </div>
+                <button type="submit" class="modal-button">Register</button>
+            </form>
+            <div class="switch-link" onclick="switchToLogin()">Already have an account? Login here</div>
+        </div>
+    </div>
+
+    <script>
+        Chart.register(ChartZoom);
+
+        let priceData = [];
+        let autoUpdate = true;
+        let updateInterval;
+        let userBalance = 9130;
+        let gckOwned = 0;
+        let lastBuyPrice = null;
+        let lastBuyTime = null;
+        const targetPrice = 9600;
+        let hasReachedTarget = false;
+        let isLoggedIn = false;
+        let currentUserEmail = null;
+        let adminPriceDirection = 0; // 0 = normal, 1 = up, -1 = down
+
+        const ctx = document.getElementById('gckSekChart').getContext('2d');
+        const gckSekChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: priceData.map(point => point.time),
+                datasets: [
+                    {
+                        label: 'GCK to SEK',
+                        data: priceData.map(point => point.price),
+                        borderColor: function(context) {
+                            const chart = context.chart;
+                            const { ctx, chartArea } = chart;
+                            if (!chartArea) return '#00ccff';
+                            const gradient = ctx.createLinearGradient(chartArea.left, 0, chartArea.right, 0);
+                            gradient.addColorStop(0, '#00ccff');
+                            gradient.addColorStop(1, '#ff00ff');
+                            return gradient;
+                        },
+                        backgroundColor: 'rgba(0, 204, 255, 0.1)',
+                        borderWidth: 3,
+                        fill: false,
+                        tension: 0.2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    },
+                    {
+                        label: 'Buy Point',
+                        data: [],
+                        borderColor: '#00ff00',
+                        backgroundColor: 'rgba(0, 255, 0, 0.5)',
+                        pointRadius: 6,
+                        pointHoverRadius: 8,
+                        showLine: false,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    x: { title: { display: true, text: 'Time', color: '#ffffff', font: { size: 16 } }, ticks: { color: '#cccccc', maxRotation: 45, autoSkip: true }, grid: { color: '#444444' } },
+                    y: { title: { display: true, text: 'Price (SEK)', color: '#ffffff', font: { size: 16 } }, ticks: { color: '#cccccc' }, grid: { color: '#444444' }, suggestedMin: 9200, suggestedMax: 9800 }
+                },
+                plugins: {
+                    legend: { labels: { color: '#ffffff', font: { size: 14 } } },
+                    tooltip: {
+                        enabled: true,
+                        mode: 'nearest',
+                        intersect: false,
+                        backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                        titleFont: { size: 16, weight: 'bold' },
+                        bodyFont: { size: 14 },
+                        padding: 10,
+                        cornerRadius: 5,
+                        borderColor: '#00ccff',
+                        borderWidth: 2,
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                return `Time: ${priceData[tooltipItems[0].dataIndex].time}`;
+                            },
+                            label: function(context) {
+                                const price = context.parsed.y.toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                const index = context.dataIndex;
+                                let change = 'N/A';
+                                if (index > 0) {
+                                    const prevPrice = priceData[index - 1].price;
+                                    const diff = context.parsed.y - prevPrice;
+                                    const percentChange = (diff / prevPrice * 100).toFixed(2);
+                                    change = `${diff.toFixed(2)} SEK (${percentChange}%)`;
+                                }
+                                return [`Price: ${price} SEK`, `Change: ${change}`];
+                            }
+                        }
+                    },
+                    zoom: { zoom: { wheel: { enabled: true, speed: 0.03 }, pinch: { enabled: true }, mode: 'xy' }, pan: { enabled: true, mode: 'xy', modifierKey: null } }
+                },
+                interaction: { mode: 'nearest', intersect: false },
+                hover: { mode: 'nearest', intersect: false }
+            }
+        });
+
+        function initializePriceData() {
+            if (priceData.length === 0) {
+                const now = new Date();
+                const time = now.toLocaleTimeString();
+                const timestamp = now.getTime();
+                priceData = [{ time: time, price: 9300, timestamp: timestamp }];
+            }
+            updatePriceDisplay();
+            updateHistoryTable();
+            updateBalanceDisplay();
+            updateChart();
+            updateSmartCalculator();
+        }
+
+        function updateGckPrice() {
+            const now = new Date();
+            const time = now.toLocaleTimeString();
+            const timestamp = now.getTime();
+            const lastPrice = priceData.length > 0 ? priceData[priceData.length - 1].price : 9300;
+
+            let newPrice;
+            if (currentUserEmail === 'koorygeorgechrist@gmail.com' && adminPriceDirection !== 0) {
+                // Admin control mode with no limits
+                const change = 10 + Math.random() * 20; // 10-30 SEK change
+                newPrice = lastPrice + (change * adminPriceDirection);
+                hasReachedTarget = newPrice >= targetPrice;
+            } else {
+                // Normal mode
+                if (!hasReachedTarget && lastPrice < targetPrice) {
+                    const step = 50 + Math.random() * 50;
+                    newPrice = lastPrice + step;
+                    if (newPrice >= targetPrice) {
+                        newPrice = targetPrice;
+                        hasReachedTarget = true;
+                    }
+                } else {
+                    hasReachedTarget = true;
+                    const fluctuation = 50 + Math.random() * 20;
+                    const direction = Math.random() < 0.5 ? -1 : 1;
+                    newPrice = lastPrice + (fluctuation * direction);
+                    newPrice = Math.min(targetPrice + 100, Math.max(targetPrice - 100, newPrice));
+                }
+            }
+
+            priceData.push({ time: time, price: newPrice, timestamp: timestamp });
+            updateChart();
+            updatePriceDisplay();
+            updateHistoryTable();
+            updateBalanceDisplay();
+            updateSmartCalculator();
+            if (isLoggedIn) saveUserProgress();
+        }
+
+        function filterDataByTimerange(timerange) {
+            const now = new Date().getTime();
+            let timeThreshold;
+            switch (timerange) {
+                case '1min': timeThreshold = now - 60 * 1000; break;
+                case '10min': timeThreshold = now - 10 * 60 * 1000; break;
+                case '1hour': timeThreshold = now - 60 * 60 * 1000; break;
+                case '5hours': timeThreshold = now - 5 * 60 * 60 * 1000; break;
+                case '1day': timeThreshold = now - 24 * 60 * 60 * 1000; break;
+                case '1week': timeThreshold = now - 7 * 24 * 60 * 60 * 1000; break;
+                case '1month': timeThreshold = now - 30 * 24 * 60 * 60 * 1000; break;
+                case '1year': timeThreshold = now - 365 * 24 * 60 * 60 * 1000; break;
+                case 'all': timeThreshold = 0; break;
+                default: timeThreshold = now - 60 * 60 * 1000;
+            }
+            return priceData.filter(point => point.timestamp >= timeThreshold);
+        }
+
+        function updateChart() {
+            const timerange = document.getElementById('timerangeSelect').value;
+            const filteredData = filterDataByTimerange(timerange);
+            gckSekChart.data.labels = filteredData.map(point => point.time);
+            gckSekChart.data.datasets[0].data = filteredData.map(point => point.price);
+            if (lastBuyTime) {
+                const buyIndex = filteredData.findIndex(point => point.time === lastBuyTime);
+                if (buyIndex !== -1) {
+                    gckSekChart.data.datasets[1].data = filteredData.map((point, index) => index === buyIndex ? point.price : null);
+                } else {
+                    gckSekChart.data.datasets[1].data = filteredData.map(() => null);
+                }
+            }
+            gckSekChart.update();
+        }
+
+        function updatePriceDisplay() {
+            const latestPrice = priceData.length > 0 ? priceData[priceData.length - 1].price.toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A';
+            document.getElementById('priceDisplay').textContent = `${latestPrice} SEK`;
+        }
+
+        function updateHistoryTable() {
+            const timerange = document.getElementById('timerangeSelect').value;
+            const filteredData = filterDataByTimerange(timerange);
+            const tableBody = document.getElementById('historyTableBody');
+            tableBody.innerHTML = '';
+            filteredData.slice(-10).reverse().forEach(point => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>${point.time}</td><td>${point.price.toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} SEK</td>`;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function updateBalanceDisplay() {
+            document.getElementById('balanceDisplay').innerHTML = `Your Balance: ${userBalance.toLocaleString('sv-SE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} SEK<br>Your GCK: ${gckOwned.toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function buyGck() {
+            if (!isLoggedIn) {
+                alert('Please login to trade');
+                openModal('loginModal');
+                return;
+            }
+            const currentPrice = priceData.length > 0 ? priceData[priceData.length - 1].price : 9500;
+            const amount = parseFloat(prompt(`Enter amount in SEK to buy GCK (Current Price: ${currentPrice.toLocaleString('sv-SE', { minimumFractionDigits: 2 })} SEK):`));
+            if (isNaN(amount) || amount <= 0) {
+                alert('Please enter a valid amount.');
+                return;
+            }
+            if (amount > userBalance) {
+                alert('Insufficient balance!');
+                return;
+            }
+            const gckBought = amount / currentPrice;
+            userBalance -= amount;
+            gckOwned += gckBought;
+            lastBuyPrice = currentPrice;
+            lastBuyTime = priceData[priceData.length - 1].time;
+            updateBalanceDisplay();
+            updateChart();
+            updateSmartCalculator();
+            saveUserProgress();
+            alert(`You bought ${gckBought.toLocaleString('sv-SE', { minimumFractionDigits: 2 })} GCK for ${amount.toLocaleString('sv-SE', { minimumFractionDigits: 0 })} SEK`);
+        }
+
+        function sellGck() {
+            if (!isLoggedIn) {
+                alert('Please login to trade');
+                openModal('loginModal');
+                return;
+            }
+            const currentPrice = priceData.length > 0 ? priceData[priceData.length - 1].price : 9500;
+            const amount = parseFloat(prompt(`Enter amount of GCK to sell (Current Price: ${currentPrice.toLocaleString('sv-SE', { minimumFractionDigits: 2 })} SEK, You own: ${gckOwned.toLocaleString('sv-SE', { minimumFractionDigits: 2 })} GCK):`));
+            if (isNaN(amount) || amount <= 0) {
+                alert('Please enter a valid amount.');
+                return;
+            }
+            if (amount > gckOwned) {
+                alert('You don’t have enough GCK to sell!');
+                return;
+            }
+            const sekEarned = amount * currentPrice;
+            gckOwned -= amount;
+            userBalance += sekEarned;
+            updateBalanceDisplay();
+            updateSmartCalculator();
+            saveUserProgress();
+            alert(`You sold ${amount.toLocaleString('sv-SE', { minimumFractionDigits: 2 })} GCK for ${sekEarned.toLocaleString('sv-SE', { minimumFractionDigits: 0 })} SEK`);
+        }
+
+        function showPercentChange() {
+            if (!lastBuyPrice) {
+                document.getElementById('percentDisplay').textContent = 'No buy recorded yet.';
+                return;
+            }
+            const currentPrice = priceData[priceData.length - 1].price;
+            const percentChange = ((currentPrice - lastBuyPrice) / lastBuyPrice * 100).toFixed(2);
+            const color = percentChange >= 0 ? '#00ff00' : '#ff0000';
+            document.getElementById('percentDisplay').innerHTML = `Percent Since Last Buy: <span style="color: ${color}">${percentChange}%</span>`;
+        }
+
+        function updateSmartCalculator() {
+            const currentPrice = priceData.length > 0 ? priceData[priceData.length - 1].price : 9500;
+            const recentPrices = priceData.slice(-5).map(p => p.price);
+            const trendStrength = recentPrices.length >= 2 ? 
+                ((recentPrices[recentPrices.length - 1] - recentPrices[0]) / recentPrices[0] * 100) : 0;
+            const needle = document.getElementById('needle');
+            const text = document.getElementById('calculatorText');
+            let recommendation, strength, angle;
+
+            if (gckOwned === 0) {
+                if (currentPrice < 9550) {
+                    const distanceFromLow = (9550 - currentPrice) / 250;
+                    strength = Math.min(100, Math.max(1, Math.round((distanceFromLow * 50) + (trendStrength > 0 ? trendStrength * 10 : 0))));
+                    recommendation = `Buy ${strength}%`;
+                    angle = -90 * (strength / 100);
+                    needle.style.backgroundColor = '#00ff00';
+                } else {
+                    const distanceFromTarget = Math.abs(targetPrice - currentPrice) / 100;
+                    strength = Math.min(100, Math.max(1, Math.round(100 - (distanceFromTarget * 50))));
+                    recommendation = `Hold ${strength}%`;
+                    angle = 0;
+                    needle.style.backgroundColor = '#ffcc00';
+                }
+            } else {
+                const profitPercent = lastBuyPrice ? ((currentPrice - lastBuyPrice) / lastBuyPrice * 100) : 0;
+                if (profitPercent >= 2 || (currentPrice >= targetPrice - 50 && hasReachedTarget)) {
+                    strength = Math.min(100, Math.max(1, Math.round(profitPercent * 10 + (hasReachedTarget ? 20 : 0))));
+                    recommendation = `Sell ${strength}%`;
+                    angle = 90 * (strength / 100);
+                    needle.style.backgroundColor = '#00ff00';
+                } else {
+                    const potentialProfit = (targetPrice - currentPrice) / 100;
+                    strength = Math.min(100, Math.max(1, Math.round(potentialProfit * 20)));
+                    recommendation = `Hold ${strength}%`;
+                    angle = 0;
+                    needle.style.backgroundColor = '#ffcc00';
+                }
+            }
+
+            text.textContent = recommendation;
+            needle.style.transform = `rotate(${angle}deg)`;
+        }
+
+        function saveUserProgress() {
+            if (!isLoggedIn || !currentUserEmail) return;
+            const userData = JSON.parse(localStorage.getItem('user')) || {};
+            userData.progress = {
+                userBalance,
+                gckOwned,
+                priceData,
+                lastBuyPrice,
+                lastBuyTime,
+                hasReachedTarget
+            };
+            localStorage.setItem('user', JSON.stringify(userData));
+        }
+
+        function loadUserProgress() {
+            if (!isLoggedIn || !currentUserEmail) return;
+            const userData = JSON.parse(localStorage.getItem('user'));
+            if (userData && userData.progress) {
+                userBalance = userData.progress.userBalance || 9130;
+                gckOwned = userData.progress.gckOwned || 0;
+                priceData = userData.progress.priceData || [];
+                lastBuyPrice = userData.progress.lastBuyPrice || null;
+                lastBuyTime = userData.progress.lastBuyTime || null;
+                hasReachedTarget = userData.progress.hasReachedTarget || false;
+                updateChart();
+                updatePriceDisplay();
+                updateHistoryTable();
+                updateBalanceDisplay();
+                updateSmartCalculator();
+            }
+        }
+
+        function resetToDefault() {
+            userBalance = 9130;
+            gckOwned = 0;
+            lastBuyPrice = null;
+            lastBuyTime = null;
+            hasReachedTarget = false;
+            priceData = [];
+            adminPriceDirection = 0;
+            initializePriceData();
+        }
+
+        function toggleAdminMenu() {
+            const adminMenu = document.getElementById('adminModMenu');
+            const showButton = document.getElementById('showAdminMenu');
+            if (isLoggedIn && currentUserEmail === 'koorygeorgechrist@gmail.com') {
+                adminMenu.style.display = 'block';
+                showButton.style.display = 'none';
+            } else {
+                adminMenu.style.display = 'none';
+                showButton.style.display = 'none';
+            }
+        }
+
+        // Make admin menu draggable
+        const adminMenu = document.getElementById('adminModMenu');
+        let isDraggingMenu = false;
+        let menuX = 20;
+        let menuY = 70;
+
+        adminMenu.addEventListener('mousedown', (e) => {
+            isDraggingMenu = true;
+            menuX = e.clientX - parseInt(adminMenu.style.left || 20);
+            menuY = e.clientY - parseInt(adminMenu.style.top || 70);
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDraggingMenu) {
+                e.preventDefault();
+                adminMenu.style.left = `${e.clientX - menuX}px`;
+                adminMenu.style.top = `${e.clientY - menuY}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDraggingMenu = false;
+        });
+
+        // Make show button draggable
+        const showButton = document.getElementById('showAdminMenu');
+        let isDraggingShow = false;
+        let showX = 20;
+        let showY = 70;
+
+        showButton.addEventListener('mousedown', (e) => {
+            isDraggingShow = true;
+            showX = e.clientX - parseInt(showButton.style.left || 20);
+            showY = e.clientY - parseInt(showButton.style.top || 70);
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDraggingShow) {
+                e.preventDefault();
+                showButton.style.left = `${e.clientX - showX}px`;
+                showButton.style.top = `${e.clientY - showY}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDraggingShow = false;
+        });
+
+        // Initialize positions
+        adminMenu.style.left = `${menuX}px`;
+        adminMenu.style.top = `${menuY}px`;
+        showButton.style.left = `${showX}px`;
+        showButton.style.top = `${showY}px`;
+
+        // Modal control functions
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function switchToRegister() {
+            closeModal('loginModal');
+            openModal('registerModal');
+        }
+
+        function switchToLogin() {
+            closeModal('registerModal');
+            openModal('loginModal');
+        }
+
+        // Login handling
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            const storedUser = JSON.parse(localStorage.getItem('user'));
+            if (storedUser && storedUser.email === email && storedUser.password === password) {
+                isLoggedIn = true;
+                currentUserEmail = email;
+                alert('Login successful!');
+                closeModal('loginModal');
+                document.getElementById('loginButton').textContent = 'Logout';
+                loadUserProgress();
+                toggleAdminMenu();
+            } else {
+                alert('Invalid email or password');
+            }
+        });
+
+        // Register handling
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+
+            const user = { 
+                email, 
+                password,
+                progress: {
+                    userBalance: 9130,
+                    gckOwned: 0,
+                    priceData: [],
+                    lastBuyPrice: null,
+                    lastBuyTime: null,
+                    hasReachedTarget: false
+                }
+            };
+            localStorage.setItem('user', JSON.stringify(user));
+            alert('Registration successful! Please login.');
+            switchToLogin();
+        });
+
+        // Login button handler
+        document.getElementById('loginButton').addEventListener('click', function() {
+            if (isLoggedIn) {
+                isLoggedIn = false;
+                currentUserEmail = null;
+                this.textContent = 'Log In';
+                alert('Logged out successfully');
+                resetToDefault();
+                toggleAdminMenu();
+            } else {
+                openModal('loginModal');
+            }
+        });
+
+        // Admin menu handlers
+        document.getElementById('hideAdminMenu').addEventListener('click', () => {
+            adminMenu.style.display = 'none';
+            showButton.style.display = 'block';
+            showButton.style.left = adminMenu.style.left;
+            showButton.style.top = adminMenu.style.top;
+        });
+
+        document.getElementById('showAdminMenu').addEventListener('click', () => {
+            adminMenu.style.display = 'block';
+            showButton.style.display = 'none';
+            adminMenu.style.left = showButton.style.left;
+            adminMenu.style.top = showButton.style.top;
+        });
+
+        document.getElementById('applyBalance').addEventListener('click', () => {
+            const newBalance = parseFloat(document.getElementById('adminSetBalance').value);
+            if (!isNaN(newBalance) && newBalance >= 0) {
+                userBalance = newBalance;
+                updateBalanceDisplay();
+                saveUserProgress();
+                alert(`Balance set to ${newBalance} SEK`);
+            } else {
+                alert('Please enter a valid balance');
+            }
+        });
+
+        document.getElementById('applyGck').addEventListener('click', () => {
+            const newGck = parseFloat(document.getElementById('adminSetGck').value);
+            if (!isNaN(newGck) && newGck >= 0) {
+                gckOwned = newGck;
+                updateBalanceDisplay();
+                saveUserProgress();
+                alert(`GCK set to ${newGck}`);
+            } else {
+                alert('Please enter a valid GCK amount');
+            }
+        });
+
+        document.getElementById('priceUp').addEventListener('click', () => {
+            adminPriceDirection = 1;
+        });
+
+        document.getElementById('priceStop').addEventListener('click', () => {
+            adminPriceDirection = 0;
+        });
+
+        document.getElementById('priceDown').addEventListener('click', () => {
+            adminPriceDirection = -1;
+        });
+
+        document.getElementById('applyPrice').addEventListener('click', () => {
+            const newPrice = parseFloat(document.getElementById('adminSetPrice').value);
+            if (!isNaN(newPrice)) {
+                const now = new Date();
+                priceData.push({ time: now.toLocaleTimeString(), price: newPrice, timestamp: now.getTime() });
+                hasReachedTarget = newPrice >= targetPrice;
+                updateChart();
+                updatePriceDisplay();
+                updateHistoryTable();
+                updateSmartCalculator();
+                saveUserProgress();
+                alert(`Price set to ${newPrice} SEK`);
+            } else {
+                alert('Please enter a valid price');
+            }
+        });
+
+        initializePriceData();
+        updateInterval = setInterval(() => {
+            if (autoUpdate) updateGckPrice();
+        }, 10000);
+        updateGckPrice();
+
+        document.getElementById('buyButton').addEventListener('click', buyGck);
+        document.getElementById('sellButton').addEventListener('click', sellGck);
+        document.getElementById('percentButton').addEventListener('click', showPercentChange);
+        document.getElementById('resetZoom').addEventListener('click', () => gckSekChart.resetZoom());
+        document.getElementById('toggleUpdates').addEventListener('click', () => {
+            autoUpdate = !autoUpdate;
+            document.getElementById('toggleUpdates').textContent = autoUpdate ? 'Pause Updates' : 'Resume Updates';
+        });
+        document.getElementById('timerangeSelect').addEventListener('change', () => {
+            updateChart();
+            updateHistoryTable();
+        });
+    </script>
+</body>
+</html>
